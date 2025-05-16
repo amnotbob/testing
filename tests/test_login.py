@@ -6,18 +6,16 @@ from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 
-
 @pytest.fixture(scope="session")
 def browser():
     # Setup Chrome options
     chrome_options = Options()
     chrome_options.add_argument('--headless')  # Run in headless mode
     # Add any other options you may need, like window size
-    service = Service(executable_path="/usr/bin/chromedriver") # Or the path to your chromedriver executable
+    service = Service(executable_path="/usr/bin/chromedriver")  # Or the path to your chromedriver executable
     driver = webdriver.Chrome(service=service, options=chrome_options)
     yield driver
     driver.quit()
-
 
 @pytest.mark.parametrize("username, password, expected_result", [
     ("student", "Password123", "Logged In Successfully"),
@@ -47,6 +45,5 @@ def test_login(browser, username, password, expected_result):
             assert expected_result in message_element.text, "Login failed"
         else:
             assert expected_result in message_element.text, "Login failed"
-
     except Exception as e:
         pytest.fail(f"Test failed: {e}")
