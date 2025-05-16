@@ -1,41 +1,45 @@
-import time
 import pytest
 from selenium import webdriver
-from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.by import By
-from selenium.webdriver.chrome.options import Options
-
+from selenium.webdriver.chrome.service import Service as ChromeService
+from webdriver_manager.chrome import ChromeDriverManager
 
 @pytest.fixture
-def browser():
+def driver():
     # Setup
-    chrome_options = Options()
-    chrome_options.add_argument("--headless")  # Run Chrome in headless mode
-    service = Service(executable_path='/usr/bin/chromedriver')
-    driver = webdriver.Chrome(service=service, options=chrome_options)
+    driver = webdriver.Chrome(service=ChromeService(ChromeDriverManager().install()))
     driver.implicitly_wait(10)
     yield driver
     # Teardown
     driver.quit()
 
 
-def test_login(browser):
+def test_login(driver):
     # 1. Navigate to the login page
-    browser.get("https://practicetestautomation.com/practice-test-login/")
+    driver.get("https://practicetestautomation.com/practice-test-login/")
 
     # 2. Enter username
-    username_field = browser.find_element(By.ID, "username")
+    username_field = driver.find_element(By.ID, "username")
     username_field.send_keys("student")
 
     # 3. Enter password
-    password_field = browser.find_element(By.ID, "password")
+    password_field = driver.find_element(By.ID, "password")
     password_field.send_keys("Password123")
 
     # 4. Click the login button
-    sign_in_button = browser.find_element(By.ID, "submit")
-    sign_in_button.click()
+    submit_button = driver.find_element(By.ID, "submit")
+    submit_button.click()
 
     # 5. Verify successful login
-    time.sleep(2) # Allow time for page to load. To be replaced with explicit wait.
-    success_message = browser.find_element(By.ID, "success")
-    assert success_message.is_displayed(), "Login failed"
+    try:
+        success_message = driver.find_element(By.ID, "success")
+        assert success_message.is_displayed(), "Success message not displayed"
+        print("Login successful!")
+    except:
+        fail_message = driver.find_element(By.ID, "error")
+        assert fail_message.is_displayed(), "Error message not displayed"
+        print("Login failed!")
+
+
+if __name__ == '__main__':
+    pytest.main([__file__])
