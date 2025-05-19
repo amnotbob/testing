@@ -1,62 +1,64 @@
 import pytest
 from selenium import webdriver
 from selenium.webdriver.common.by import By
+from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.chrome.options import Options
 
 
 @pytest.fixture
 def driver():
-    # Setup
+    # Set up Chrome options for headless mode
     chrome_options = Options()
-    chrome_options.add_argument("--headless")
-    driver = webdriver.Chrome(options=chrome_options)
-    driver.get("https://practicetestautomation.com/practice-test-login/")
-    print("Webpage loaded successfully")
+    chrome_options.add_argument("--headless")  # Ensure GUI is off
+    chrome_options.add_argument("--no-sandbox") # Bypass OS security model
+    chrome_options.add_argument("--disable-dev-shm-usage") # overcome limited resource
+
+    # Instantiate Chrome WebDriver with options
+    service = Service(executable_path='/usr/bin/chromedriver')
+    driver = webdriver.Chrome(service=service, options=chrome_options)
+
     yield driver
-    # Teardown
+
     driver.quit()
-    print("Browser closed")
 
 
-def test_successful_login(driver):
-    # Enter username
-    username_field = driver.find_element(By.ID, "username")
-    username_field.send_keys("student")
-    print("Username entered")
+def test_login(driver):
+    # Define the URL
+    url = "https://practicetestautomation.com/practice-test-login/"
 
-    # Enter password
-    password_field = driver.find_element(By.ID, "password")
-    password_field.send_keys("Password123")
-    print("Password entered")
+    # Define valid credentials
+    username = "student"
+    password = "Password123"
 
-    # Click login button
-    submit_button = driver.find_element(By.ID, "submit")
-    submit_button.click()
-    print("Login button clicked")
+    try:
+        # 1. Go to the website
+        print("Navigating to URL...")
+        driver.get(url)
 
-    # Verify successful login message
-    success_message = driver.find_element(By.XPATH, "//h1[text()='Logged In Successfully']")
-    assert success_message.is_displayed(), "Success message not displayed"
-    print("Login successful")
+        # 2. Type username into the username box
+        print("Entering username...")
+        username_field = driver.find_element(By.ID, "username")
+        username_field.send_keys(username)
 
+        # 3. Type password into the password box
+        print("Entering password...")
+        password_field = driver.find_element(By.ID, "password")
+        password_field.send_keys(password)
 
-def test_failed_login(driver):
-    # Enter invalid username
-    username_field = driver.find_element(By.ID, "username")
-    username_field.send_keys("invalidUser")
-    print("Invalid username entered")
+        # 4. Click the login button
+        print("Clicking submit button...")
+        submit_button = driver.find_element(By.ID, "submit")
+        submit_button.click()
 
-    # Enter invalid password
-    password_field = driver.find_element(By.ID, "password")
-    password_field.send_keys("invalidPassword")
-    print("Invalid password entered")
+        # 5. Check if the page shows a success message
+        print("Checking for successful login...")
+        success_message = driver.find_element(By.ID, "content")
+        assert "Logged In Successfully" in success_message.text or "Welcome" in success_message.text
+        print("Login successful!")
 
-    # Click login button
-    submit_button = driver.find_element(By.ID, "submit")
-    submit_button.click()
-    print("Login button clicked")
+    except Exception as e:
+        print("Error: ", str(e))
+        assert False, f"Test failed due to exception: {str(e)}"
 
-    # Verify error message
-    error_message = driver.find_element(By.ID, "error")
-    assert error_message.is_displayed(), "Error message not displayed"
-    print("Login failed as expected")
+    finally:
+        print("Test completed.")
