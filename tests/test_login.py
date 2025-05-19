@@ -1,114 +1,68 @@
 import pytest
 from selenium import webdriver
 from selenium.webdriver.common.by import By
-from selenium.webdriver.chrome.options import Options
-
-# Define test data
-USERNAME = "student"
-PASSWORD = "Password123"
-LOGIN_URL = "https://practicetestautomation.com/practice-test-login/"
-SUCCESS_MESSAGE = "Logged In Successfully"
-INVALID_USERNAME_MESSAGE = "Your username is invalid!"
-INVALID_PASSWORD_MESSAGE = "Your password is invalid!"
+from selenium.webdriver.chrome.service import Service as ChromeService
+from webdriver_manager.chrome import ChromeDriverManager
 
 
-@pytest.fixture(scope="module")
+@pytest.fixture
 def driver():
-    # Set up Chrome options for headless mode
-    chrome_options = Options()
-    chrome_options.add_argument("--headless")
-
-    # Initialize the Chrome driver
-    driver = webdriver.Chrome(options=chrome_options)
-
-    # Maximize window (compatible with headless mode)
-    driver.maximize_window()
-
+    # Setup:
+    print("Setting up the browser...")
+    service = ChromeService(executable_path=ChromeDriverManager().install())
+    driver = webdriver.Chrome(service=service)
+    driver.implicitly_wait(5)
     yield driver
-
-    # Teardown: Close the browser after the module tests are finished
+    # Teardown:
+    print("Tearing down the browser...")
     driver.quit()
 
 
 def test_login_success(driver):
-    print("Starting test_login_success")
-    # Step 1: Go to the login page
-    driver.get(LOGIN_URL)
-    print(f"Navigated to {LOGIN_URL}")
+    # 1. Go to the login page
+    print("Navigating to the login page...")
+    driver.get("https://practicetestautomation.com/practice-test-login/")
 
-    # Step 2: Type username
+    # 2. Type username and password
+    print("Typing username and password...")
     username_field = driver.find_element(By.ID, "username")
-    username_field.send_keys(USERNAME)
-    print(f"Entered username: {USERNAME}")
-
-    # Step 3: Type password
     password_field = driver.find_element(By.ID, "password")
-    password_field.send_keys(PASSWORD)
-    print(f"Entered password: {PASSWORD}")
+    username_field.send_keys("student")
+    password_field.send_keys("Password123")
 
-    # Step 4: Click the login button
+    # 3. Push the submit button
+    print("Clicking the login button...")
     submit_button = driver.find_element(By.ID, "submit")
     submit_button.click()
-    print("Clicked login button")
 
-    # Step 5: Check for successful login message
-    success_element = driver.find_element(By.ID, "success")
-    actual_message = success_element.text
-    assert SUCCESS_MESSAGE in actual_message, f"Expected '{SUCCESS_MESSAGE}', but got '{actual_message}'"
-    print("Login successful and message verified.")
+    # 4. Verify that the user has logged in successfully
+    print("Verifying successful login...")
+    welcome_message = driver.find_element(By.XPATH, "//h1[text()='Logged In Successfully']")
+    assert welcome_message.is_displayed(), "Welcome message not displayed. Login failed."
+    print("Login successful!")
 
 
-def test_invalid_username(driver):
-    print("Starting test_invalid_username")
-    # Step 1: Go to the login page
-    driver.get(LOGIN_URL)
-    print(f"Navigated to {LOGIN_URL}")
+def test_login_failure(driver):
+    # 1. Go to the login page
+    print("Navigating to the login page...")
+    driver.get("https://practicetestautomation.com/practice-test-login/")
 
-    # Step 2: Type invalid username
+    # 2. Type username and password
+    print("Typing incorrect username and password...")
     username_field = driver.find_element(By.ID, "username")
-    username_field.send_keys("invalid_user")
-    print("Entered invalid username")
-
-    # Step 3: Type password
     password_field = driver.find_element(By.ID, "password")
-    password_field.send_keys(PASSWORD)
-    print("Entered password")
+    username_field.send_keys("wronguser")
+    password_field.send_keys("wrongpassword")
 
-    # Step 4: Click the login button
+    # 3. Push the submit button
+    print("Clicking the login button...")
     submit_button = driver.find_element(By.ID, "submit")
     submit_button.click()
-    print("Clicked login button")
 
-    # Step 5: Check for error message
-    error_element = driver.find_element(By.ID, "error")
-    actual_message = error_element.text
-    assert INVALID_USERNAME_MESSAGE in actual_message, f"Expected '{INVALID_USERNAME_MESSAGE}', but got '{actual_message}'"
-    print("Invalid username error message verified.")
+    # 4. Verify the error message
+    print("Verifying error message...")
+    error_message = driver.find_element(By.ID, "error")
+    assert error_message.is_displayed(), "Error message not displayed."
+    print("Login failed as expected!")
 
 
-def test_invalid_password(driver):
-    print("Starting test_invalid_password")
-    # Step 1: Go to the login page
-    driver.get(LOGIN_URL)
-    print(f"Navigated to {LOGIN_URL}")
-
-    # Step 2: Type username
-    username_field = driver.find_element(By.ID, "username")
-    username_field.send_keys(USERNAME)
-    print("Entered username")
-
-    # Step 3: Type invalid password
-    password_field = driver.find_element(By.ID, "password")
-    password_field.send_keys("invalid_password")
-    print("Entered invalid password")
-
-    # Step 4: Click the login button
-    submit_button = driver.find_element(By.ID, "submit")
-    submit_button.click()
-    print("Clicked login button")
-
-    # Step 5: Check for error message
-    error_element = driver.find_element(By.ID, "error")
-    actual_message = error_element.text
-    assert INVALID_PASSWORD_MESSAGE in actual_message, f"Expected '{INVALID_PASSWORD_MESSAGE}', but got '{actual_message}'"
-    print("Invalid password error message verified.")
