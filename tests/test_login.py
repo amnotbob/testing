@@ -58,7 +58,6 @@ def test_login_success(driver):
     print("Login successful and message verified.")
 
 
-
 def test_invalid_username(driver):
     print("Starting test_invalid_username")
     # Step 1: Go to the login page
