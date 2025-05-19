@@ -1,4 +1,3 @@
 python
-draft-or-prefix
 selenium
 webdriver_manager
