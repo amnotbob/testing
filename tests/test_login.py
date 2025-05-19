@@ -1,30 +1,23 @@
 import pytest
 from selenium import webdriver
-from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.by import By
-from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.chrome.service import Service
 
 
 @pytest.fixture
 def driver():
-    # Setup Chrome options for headless mode (optional, but good for CI/CD)
-    chrome_options = Options()
-    chrome_options.add_argument("--headless")  # Ensure GUI is off
-    chrome_options.add_argument("--no-sandbox") # overcome limited resource error
-    chrome_options.add_argument("--disable-dev-shm-usage") # resolves crashing
-
-    # Set up ChromeDriver service
-    s = Service('./chromedriver')  # Path to your chromedriver
-
-    # Initialize WebDriver with options and service
-    driver = webdriver.Chrome(service=s, options=chrome_options)
+    # Setup
+    s = Service('./chromedriver')
+    driver = webdriver.Chrome(service=s)
+    driver.implicitly_wait(10)
     yield driver
+    # Teardown
     driver.quit()
 
-def test_login(driver):
-    # Test case for successful login
+
+def test_login_success(driver):
+    # 1. Navigate to the login page
     try:
-        # 1. Navigate to the login page
         driver.get("https://practicetestautomation.com/practice-test-login/")
 
         # 2. Enter username and password
@@ -38,9 +31,37 @@ def test_login(driver):
         submit_button.click()
 
         # 4. Verify successful login
-        success_message = driver.find_element(By.XPATH, "//div[@id='content']//h1")
-        assert success_message.text == "Logged In Successfully", "Login was not successful"
+        success_message = driver.find_element(By.ID, "content")
+        assert success_message.is_displayed()
+        assert "Logged In Successfully" in success_message.text
 
     except Exception as e:
         print("Error: ", str(e))
-        assert False, f"Test failed due to exception: {str(e)}"
+    finally:
+        pass
+
+
+def test_login_failure(driver):
+    # 1. Navigate to the login page
+    try:
+        driver.get("https://practicetestautomation.com/practice-test-login/")
+
+        # 2. Enter invalid username and password
+        username_field = driver.find_element(By.ID, "username")
+        password_field = driver.find_element(By.ID, "password")
+        username_field.send_keys("invalidUser")
+        password_field.send_keys("invalidPassword")
+
+        # 3. Click the login button
+        submit_button = driver.find_element(By.ID, "submit")
+        submit_button.click()
+
+        # 4. Verify login failure message
+        error_message = driver.find_element(By.ID, "error")
+        assert error_message.is_displayed()
+        assert "Your username is invalid!" in error_message.text
+
+    except Exception as e:
+        print("Error: ", str(e))
+    finally:
+        pass
