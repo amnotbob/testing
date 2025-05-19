@@ -1,45 +1,54 @@
-import pytest
+import time
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.service import Service as ChromeService
 from webdriver_manager.chrome import ChromeDriverManager
 
-@pytest.fixture
-def driver():
-    # Setup
-    driver = webdriver.Chrome(service=ChromeService(ChromeDriverManager().install()))
-    driver.implicitly_wait(10)
-    yield driver
-    # Teardown
-    driver.quit()
+import unittest
 
+class LoginTest(unittest.TestCase):
 
-def test_login(driver):
-    # 1. Navigate to the login page
-    driver.get("https://practicetestautomation.com/practice-test-login/")
+    def setUp(self):
+        # Setup browser - Chrome
+        self.driver = webdriver.Chrome(service=ChromeService(ChromeDriverManager().install()))
+        self.driver.maximize_window()
 
-    # 2. Enter username
-    username_field = driver.find_element(By.ID, "username")
-    username_field.send_keys("student")
+    def test_login(self):
+        try:
+            # 1. Navigate to the login page
+            self.driver.get("https://practicetestautomation.com/practice-test-login/")
 
-    # 3. Enter password
-    password_field = driver.find_element(By.ID, "password")
-    password_field.send_keys("Password123")
+            # 2. Enter username
+            username_field = self.driver.find_element(By.ID, "username")
+            username_field.send_keys("student")
+            time.sleep(1)
 
-    # 4. Click the login button
-    submit_button = driver.find_element(By.ID, "submit")
-    submit_button.click()
+            # 3. Enter password
+            password_field = self.driver.find_element(By.ID, "password")
+            password_field.send_keys("Password123")
+            time.sleep(1)
 
-    # 5. Verify successful login
-    try:
-        success_message = driver.find_element(By.ID, "success")
-        assert success_message.is_displayed(), "Success message not displayed"
-        print("Login successful!")
-    except:
-        fail_message = driver.find_element(By.ID, "error")
-        assert fail_message.is_displayed(), "Error message not displayed"
-        print("Login failed!")
+            # 4. Click Submit button
+            submit_button = self.driver.find_element(By.XPATH, "//button[@class='btn']")
+            submit_button.click()
+            time.sleep(2)
 
+            # 5. Verify successful login
+            success_message = self.driver.find_element(By.ID, "content")
+
+            # Verify either success or failure message
+            if "Congratulations" in success_message.text:
+                self.assertEqual(success_message.text, "Congratulations student. You successfully logged in!")
+                print("\nLogin passed")
+            else:
+                self.assertIn("invalid", success_message.text.lower())
+                print("\nLogin failed")
+        except Exception as e:
+            print(f"An error occurred: {e}")
+            self.fail(f"Test failed due to exception: {e}")
+        finally:
+            # Quit browser
+            self.driver.quit()
 
 if __name__ == '__main__':
-    pytest.main([__file__])
+    unittest.main()
