@@ -1,14 +1,12 @@
 import pytest
 from selenium import webdriver
 from selenium.webdriver.common.by import By
-from selenium.webdriver.chrome.service import Service
 
 
 @pytest.fixture
 def driver():
     # Setup: Launch browser
-    service = Service(executable_path='/usr/bin/chromedriver')
-    driver = webdriver.Chrome(service=service)
+    driver = webdriver.Chrome()
     yield driver
     # Teardown: Close browser
     driver.quit()
@@ -66,6 +64,7 @@ def test_login_failure(driver):
     error_message = driver.find_element(By.ID, "error")
     assert error_message.text == "Your username is invalid!", f"Expected 'Your username is invalid!', but got '{error_message.text}'"
     print("Login failed as expected.")
+
 
 
 # Run the tests
