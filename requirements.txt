@@ -1,2 +1,1 @@
-pytest==7.4.0
-selenium==4.16.0
+selenium
